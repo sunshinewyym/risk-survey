@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}提交成功{% endblock %}
+{% block content %}
+<main class="center-page">
+  <section class="message-card success-card">
+    <div class="success-icon">✓</div>
+    <p class="eyebrow">SUBMITTED</p>
+    <h1>提交成功</h1>
+    <p>{{ survey.success_message|linebreaksbr }}</p>
+    <small>本页面不展示自动评分或风险结论。</small>
+  </section>
+</main>
+{% endblock %}

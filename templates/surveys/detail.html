@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}{{ survey.title }}{% endblock %}
+{% block content %}
+<main class="survey-shell">
+  <header class="survey-hero">
+    <p class="eyebrow">YLAW TEAM · CLIENT SURVEY</p>
+    <h1>{{ survey.title }}</h1>
+    {% if survey.description %}<p class="hero-lead">{{ survey.description|linebreaksbr }}</p>{% endif %}
+  </header>
+
+  <section class="survey-card">
+    <div class="survey-progress" aria-live="polite">
+      <span><b id="answered-count">0</b> / {{ form.fields|length }} 项已填写</span>
+      <span class="progress-track"><i id="progress-fill"></i></span>
+    </div>
+    <form method="post" novalidate id="survey-form">
+      {% csrf_token %}
+      <div id="validation-summary" class="form-alert" role="alert" tabindex="-1"{% if not form.errors %} hidden{% endif %}>
+        <strong>还有必填项未完成</strong>
+        <span>已为您标出，请从第一处开始补充。</span>
+      </div>
+      {% if form.non_field_errors %}<div class="form-alert">{{ form.non_field_errors }}</div>{% endif %}
+      {% for section, fields in form.question_groups %}
+        <section class="question-section">
+          <header class="section-heading"><span>{{ forloop.counter|stringformat:"02d" }}</span><h2>{{ section }}</h2></header>
+          {% for field in fields %}
+            <article class="question{% if field.errors %} invalid{% endif %}" data-required="{{ field.field.required|yesno:'true,false' }}">
+              <div class="question-title">
+                <span class="question-number">{{ field.field.question_order }}</span>
+                <div>
+                  <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<em>必填</em>{% else %}<small>选填</small>{% endif %}</label>
+                  {% if field.help_text %}<p>{{ field.help_text }}</p>{% endif %}
+                </div>
+              </div>
+              <div class="field-control">{{ field }}</div>
+              {% if field.errors %}<div class="field-error">{{ field.errors|striptags }}</div>{% endif %}
+            </article>
+          {% endfor %}
+        </section>
+      {% endfor %}
+      <footer class="form-actions">
+        <p>提交前请确认内容真实、完整。</p>
+        <button type="submit">提交问卷</button>
+      </footer>
+    </form>
+  </section>
+  <footer class="public-footer">ylaw team · 客户信息仅用于本次服务沟通与分析</footer>
+</main>
+<script src="{% static 'surveys/form.js' %}?v=20260830-3" defer></script>
+{% endblock %}

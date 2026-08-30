@@ -1,0 +1,32 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | ylaw survey{% endblock %}
+
+{% block responsive %}
+  {{ block.super }}
+  <link rel="stylesheet" href="{% static 'surveys/admin.css' %}?v=20260830">
+{% endblock %}
+
+{% block branding %}
+  <div id="site-name">
+    <a href="{% url 'admin:index' %}" aria-label="返回管理首页">
+      <span class="admin-brand-mark">Y</span>
+      <span class="admin-brand-copy">
+        <strong>ylaw survey</strong>
+        <small>客户问卷管理中心</small>
+      </span>
+    </a>
+  </div>
+  {% if user.is_anonymous %}{% include "admin/color_theme_toggle.html" %}{% endif %}
+{% endblock %}
+
+{% block nav-global %}
+  {% if user.is_authenticated %}
+    <nav class="admin-shortcuts" aria-label="常用功能">
+      <a href="/" target="_blank" rel="noopener">查看公开问卷</a>
+      <a href="{% url 'admin:surveys_submission_changelist' %}">提交记录</a>
+      <a class="shortcut-primary" href="{% url 'admin:surveys_survey_add' %}">＋ 新建问卷</a>
+    </nav>
+  {% endif %}
+{% endblock %}
