@@ -10,6 +10,9 @@
 - PostgreSQL 保存提交时间、每一道题及答案快照；
 - Django Admin 查看、搜索、按问卷和时间筛选；
 - Admin 批量导出 CSV、Excel 和 Markdown；
+- 独立活动报名页 `/apply/`，支持一家企业登记多位参会人员；
+- 报名后台汇总报名公司、参会人数、来源渠道和热门问题；
+- 报名成功后可选发送飞书群机器人提醒，通知失败不影响数据保存；
 - 使用项目品牌色的响应式现代后台界面，并保留 Django 原生权限体系；
 - Django CSRF、安全 Cookie 和反向代理 HTTPS 识别；
 - PostgreSQL Docker Volume、容器自动重启、每日数据库备份；
@@ -49,6 +52,15 @@ POSTGRES_PASSWORD
 DJANGO_SUPERUSER_PASSWORD
 ```
 
+如需飞书群提醒，请在目标群添加“自定义机器人”，并填写：
+
+```text
+FEISHU_WEBHOOK_URL
+FEISHU_WEBHOOK_SECRET（机器人未开启签名校验时留空）
+```
+
+Webhook 未配置或临时发送失败时，报名仍会正常写入数据库，后台会显示通知状态。
+
 可使用以下命令生成随机值：
 
 ```bash
@@ -67,7 +79,9 @@ curl --fail http://127.0.0.1:8082/healthz
 
 ```text
 http://127.0.0.1:8082/
+http://127.0.0.1:8082/survey/
 http://127.0.0.1:8082/admin/
+http://127.0.0.1:8082/apply/
 http://127.0.0.1:8082/s/joint-project-risk-diagnosis/
 ```
 
@@ -79,7 +93,7 @@ http://127.0.0.1:8082/s/joint-project-risk-diagnosis/
 |---|---|
 | `survey.ylawteam.com` | `http://127.0.0.1:8082` |
 
-公开问卷地址为 `https://survey.ylawteam.com/`，它会进入 `.env` 中 `DJANGO_DEFAULT_SURVEY_SLUG` 指定的问卷；管理后台为 `https://survey.ylawteam.com/admin/`。
+公开问卷地址为 `https://survey.ylawteam.com/survey/`（原根地址继续可用），活动报名地址为 `https://survey.ylawteam.com/apply/`，管理后台为 `https://survey.ylawteam.com/admin/`，报名统计位于后台“活动报名”。
 如使用 Cloudflare Access，只保护 `survey.ylawteam.com/admin/*`，不要保护整个域名，否则客户将无法匿名填写。
 
 ## 备份

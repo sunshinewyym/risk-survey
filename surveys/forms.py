@@ -1,8 +1,114 @@
 from collections import OrderedDict
+import re
 
 from django import forms
+from django.forms import formset_factory
 
-from .models import Question
+from .models import Attendee, EventRegistration, Question
+
+
+PHONE_PATTERN = r"^1[3-9]\d{9}$"
+
+
+class EventRegistrationForm(forms.ModelForm):
+    project_count = forms.ChoiceField(
+        label="公司目前与外部合作的项目数量",
+        choices=EventRegistration.PROJECT_CHOICES,
+        widget=forms.RadioSelect,
+    )
+    lawsuit_count = forms.ChoiceField(
+        label="公司过往涉诉 / 被追索案件数量",
+        choices=EventRegistration.LAWSUIT_CHOICES,
+        widget=forms.RadioSelect,
+    )
+    priority_issues = forms.MultipleChoiceField(
+        label="本次专场中，您最希望重点解答哪些问题？",
+        help_text="请选择 1-3 项，高频问题将优先安排讲解。",
+        choices=EventRegistration.ISSUE_CHOICES,
+        widget=forms.CheckboxSelectMultiple,
+    )
+    source_channel = forms.ChoiceField(
+        label="从哪里了解到本次活动",
+        choices=EventRegistration.SOURCE_CHOICES,
+        widget=forms.RadioSelect,
+    )
+
+    class Meta:
+        model = EventRegistration
+        fields = (
+            "company_name",
+            "contact_name",
+            "contact_phone",
+            "city",
+            "project_count",
+            "lawsuit_count",
+            "priority_issues",
+            "other_risk",
+            "source_channel",
+        )
+        widgets = {
+            "company_name": forms.TextInput(attrs={"placeholder": "请填写营业执照上的全称"}),
+            "contact_name": forms.TextInput(attrs={"placeholder": "请输入联系人姓名"}),
+            "contact_phone": forms.TextInput(
+                attrs={"placeholder": "请输入 11 位手机号", "inputmode": "numeric"}
+            ),
+            "city": forms.TextInput(attrs={"placeholder": "如：广州"}),
+            "project_count": forms.RadioSelect,
+            "lawsuit_count": forms.RadioSelect,
+            "other_risk": forms.Textarea(
+                attrs={
+                    "rows": 5,
+                    "placeholder": "简单描述项目背景、当前困难和希望实现的结果",
+                }
+            ),
+            "source_channel": forms.RadioSelect,
+        }
+        error_messages = {
+            "company_name": {"required": "请填写公司名称"},
+            "contact_name": {"required": "请填写联系人"},
+            "contact_phone": {"required": "请填写联系电话"},
+            "city": {"required": "请填写公司所在城市"},
+        }
+
+    def clean_contact_phone(self):
+        phone = self.cleaned_data["contact_phone"].strip()
+        if not re.fullmatch(PHONE_PATTERN, phone):
+            raise forms.ValidationError("请输入正确的 11 位手机号")
+        return phone
+
+    def clean_priority_issues(self):
+        issues = self.cleaned_data["priority_issues"]
+        if len(issues) > 3:
+            raise forms.ValidationError("最多选择 3 项")
+        return issues
+
+
+class AttendeeForm(forms.ModelForm):
+    class Meta:
+        model = Attendee
+        fields = ("name", "role", "phone")
+        widgets = {
+            "name": forms.TextInput(attrs={"placeholder": "姓名"}),
+            "role": forms.TextInput(attrs={"placeholder": "如：老板 / 财务负责人"}),
+            "phone": forms.TextInput(
+                attrs={"placeholder": "11 位手机号", "inputmode": "numeric"}
+            ),
+        }
+
+    def clean_phone(self):
+        phone = self.cleaned_data["phone"].strip()
+        if not re.fullmatch(PHONE_PATTERN, phone):
+            raise forms.ValidationError("请输入正确的 11 位手机号")
+        return phone
+
+
+AttendeeFormSet = formset_factory(
+    AttendeeForm,
+    extra=0,
+    min_num=1,
+    validate_min=True,
+    can_delete=True,
+)
 
 
 class SurveyResponseForm(forms.Form):

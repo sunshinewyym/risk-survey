@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}总包反背锅行动 001｜报名问卷{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'surveys/apply.css' %}?v=20260901-2">{% endblock %}
+{% block content %}
+<main class="apply-shell">
+  <header class="apply-hero">
+    <div class="apply-brand"><span>Y</span><p>一片叶律师<small>工程风险观察局</small></p></div>
+    <div class="hero-copy">
+      <p class="apply-badge">报名问卷</p>
+      <h1>总包反背锅行动 001</h1>
+      <h2>填完这份问卷，现场讲你最关心的问题</h2>
+      <p>项目是合作方的，责任为什么落到公司？您勾选的问题会进入现场问题库，高频问题优先安排讲解。</p>
+      <div class="hero-meta"><span>约 2 分钟</span><span>支持多人报名</span><span>信息保密</span></div>
+    </div>
+  </header>
+
+  <form method="post" id="apply-form" class="apply-card" novalidate>
+    {% csrf_token %}
+    {{ attendee_formset.management_form }}
+    <div id="apply-alert" class="apply-alert" role="alert" tabindex="-1"{% if not form.errors and not attendee_formset.errors %} hidden{% endif %}>
+      <strong>还有信息未填写完整</strong>
+      <span>已为您标出，请从第一处开始补充。</span>
+    </div>
+
+    <section class="apply-section">
+      <header class="apply-section-title"><span>一</span><div><h2>报名信息</h2><p>请留下准确联系方式，便于确认席位和发送活动通知。</p></div></header>
+      <div class="apply-grid">
+        <div class="apply-field{% if form.company_name.errors %} invalid{% endif %}"><label for="{{ form.company_name.id_for_label }}">公司名称<em>必填</em></label>{{ form.company_name }}{% for error in form.company_name.errors %}<p class="apply-error">{{ error }}</p>{% endfor %}</div>
+        <div class="apply-field{% if form.city.errors %} invalid{% endif %}"><label for="{{ form.city.id_for_label }}">公司所在城市<em>必填</em></label>{{ form.city }}{% for error in form.city.errors %}<p class="apply-error">{{ error }}</p>{% endfor %}</div>
+        <div class="apply-field{% if form.contact_name.errors %} invalid{% endif %}"><label for="{{ form.contact_name.id_for_label }}">联系人<em>必填</em></label>{{ form.contact_name }}{% for error in form.contact_name.errors %}<p class="apply-error">{{ error }}</p>{% endfor %}</div>
+        <div class="apply-field{% if form.contact_phone.errors %} invalid{% endif %}"><label for="{{ form.contact_phone.id_for_label }}">联系电话<em>必填</em></label>{{ form.contact_phone }}{% for error in form.contact_phone.errors %}<p class="apply-error">{{ error }}</p>{% endfor %}</div>
+      </div>
+
+      <div class="attendee-heading"><div><h3>参会人员信息 <em>必填</em></h3><p>一家企业可登记多人，报名人数将自动计算。</p></div><strong><span id="attendee-count">1</span> 人</strong></div>
+      {% if attendee_formset.non_form_errors %}<div class="apply-error formset-error">{{ attendee_formset.non_form_errors|striptags }}</div>{% endif %}
+      <div id="attendee-list" class="attendee-list">
+        {% for attendee in attendee_formset %}
+          <article class="attendee-item{% if attendee.errors %} invalid{% endif %}"{% if attendee.DELETE.value %} hidden{% endif %}>
+            <header><strong>参会人员 <span class="attendee-number">{{ forloop.counter }}</span></strong><button type="button" class="remove-attendee">移除</button></header>
+            <span hidden>{{ attendee.DELETE }}</span>
+            <div class="attendee-grid">
+              <div class="apply-field"><label for="{{ attendee.name.id_for_label }}">姓名</label>{{ attendee.name }}{% for error in attendee.name.errors %}<p class="apply-error">{{ error }}</p>{% endfor %}</div>
+              <div class="apply-field"><label for="{{ attendee.role.id_for_label }}">职务</label>{{ attendee.role }}{% for error in attendee.role.errors %}<p class="apply-error">{{ error }}</p>{% endfor %}</div>
+              <div class="apply-field"><label for="{{ attendee.phone.id_for_label }}">联系电话</label>{{ attendee.phone }}{% for error in attendee.phone.errors %}<p class="apply-error">{{ error }}</p>{% endfor %}</div>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+      <button type="button" id="add-attendee" class="add-attendee">＋ 添加参会人员</button>
+      <template id="attendee-template">
+        <article class="attendee-item">
+          <header><strong>参会人员 <span class="attendee-number"></span></strong><button type="button" class="remove-attendee">移除</button></header>
+          <span hidden>{{ attendee_formset.empty_form.DELETE }}</span>
+          <div class="attendee-grid">
+            <div class="apply-field"><label for="{{ attendee_formset.empty_form.name.id_for_label }}">姓名</label>{{ attendee_formset.empty_form.name }}</div>
+            <div class="apply-field"><label for="{{ attendee_formset.empty_form.role.id_for_label }}">职务</label>{{ attendee_formset.empty_form.role }}</div>
+            <div class="apply-field"><label for="{{ attendee_formset.empty_form.phone.id_for_label }}">联系电话</label>{{ attendee_formset.empty_form.phone }}</div>
+          </div>
+        </article>
+      </template>
+    </section>
+
+    <section class="apply-section">
+      <header class="apply-section-title"><span>二</span><div><h2>企业现状</h2><p>用于了解现场参会企业的业务情况，仅作汇总分析。</p></div></header>
+      <div class="apply-field choice-field{% if form.project_count.errors %} invalid{% endif %}"><label>{{ form.project_count.label }}<em>必填</em></label><div class="apply-options">{{ form.project_count }}</div>{% for error in form.project_count.errors %}<p class="apply-error">{{ error }}</p>{% endfor %}</div>
+      <div class="apply-field choice-field{% if form.lawsuit_count.errors %} invalid{% endif %}"><label>{{ form.lawsuit_count.label }}<em>必填</em></label><div class="apply-options">{{ form.lawsuit_count }}</div>{% for error in form.lawsuit_count.errors %}<p class="apply-error">{{ error }}</p>{% endfor %}</div>
+    </section>
+
+    <section class="apply-section">
+      <header class="apply-section-title"><span>三</span><div><h2>您最关心的问题</h2><p>请选择 1-3 项，高频问题将优先安排现场讲解。</p></div></header>
+      <div class="apply-field issue-field{% if form.priority_issues.errors %} invalid{% endif %}">
+        <div class="issue-counter">已选 <strong id="issue-count">0</strong> / 3</div>
+        <div class="issue-options">{{ form.priority_issues }}</div>
+        {% for error in form.priority_issues.errors %}<p class="apply-error">{{ error }}</p>{% endfor %}
+        <p id="issue-limit" class="apply-error" hidden>最多选择 3 项</p>
+      </div>
+      <div class="apply-field{% if form.other_risk.errors %} invalid{% endif %}"><label for="{{ form.other_risk.id_for_label }}">除以上问题外，您目前最急需解决的合作项目风险是什么？<small>选填</small></label>{{ form.other_risk }}{% for error in form.other_risk.errors %}<p class="apply-error">{{ error }}</p>{% endfor %}</div>
+    </section>
+
+    <section class="apply-section">
+      <header class="apply-section-title"><span>四</span><div><h2>从哪里了解到本次活动</h2><p>帮助我们优化后续活动的信息发布。</p></div></header>
+      <div class="apply-field choice-field{% if form.source_channel.errors %} invalid{% endif %}"><div class="apply-options source-options">{{ form.source_channel }}</div>{% for error in form.source_channel.errors %}<p class="apply-error">{{ error }}</p>{% endfor %}</div>
+      <aside class="apply-notice">
+        <p><strong>信息使用说明</strong> 您提交的信息仅用于报名确认、活动通知、内容复盘和后续沟通，不向无关第三方提供。</p>
+        <p><strong>影像使用说明</strong> 活动现场可能拍摄照片或视频。如不希望出镜，请提前告知工作人员。</p>
+      </aside>
+    </section>
+
+    <footer class="apply-actions"><p>提交即表示您已阅读并同意以上说明。</p><button type="submit">确认提交报名</button></footer>
+  </form>
+  <footer class="apply-footer">ylaw team · 客户信息仅用于本次活动服务</footer>
+</main>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'surveys/apply.js' %}?v=20260901-1" defer></script>{% endblock %}

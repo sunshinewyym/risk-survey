@@ -1,10 +1,19 @@
 from django.conf import settings
 from django.contrib import admin
+from collections import Counter
+
 from django.db.models import Count, Q
 
-from .exports import csv_response, markdown_response, xlsx_response
+from .exports import (
+    csv_response,
+    markdown_response,
+    registration_csv_response,
+    registration_markdown_response,
+    registration_xlsx_response,
+    xlsx_response,
+)
 from .forms import QuestionAdminForm
-from .models import Answer, Question, Submission, Survey
+from .models import Answer, Attendee, EventRegistration, Question, Submission, Survey
 
 
 admin.site.site_header = "ylaw-survey 问卷管理"
@@ -75,6 +84,17 @@ class AnswerInline(admin.TabularInline):
         return False
 
 
+class AttendeeInline(admin.TabularInline):
+    model = Attendee
+    extra = 0
+    fields = ("name", "role", "phone")
+    readonly_fields = fields
+    can_delete = False
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
 @admin.action(description="导出所选记录为 CSV")
 def export_csv(modeladmin, request, queryset):
     return csv_response(queryset)
@@ -133,6 +153,118 @@ class AnswerAdmin(admin.ModelAdmin):
     list_filter = ("submission__survey", "question__question_type")
     search_fields = ("question_label", "display_value", "submission__id")
     readonly_fields = ("submission", "question", "question_label", "value", "display_value")
+
+    def has_add_permission(self, request):
+        return False
+
+
+@admin.action(description="导出所选报名为 CSV")
+def export_registration_csv(modeladmin, request, queryset):
+    return registration_csv_response(queryset)
+
+
+@admin.action(description="导出所选报名为 Excel")
+def export_registration_excel(modeladmin, request, queryset):
+    return registration_xlsx_response(queryset)
+
+
+@admin.action(description="导出所选报名为 Markdown")
+def export_registration_markdown(modeladmin, request, queryset):
+    return registration_markdown_response(queryset)
+
+
+@admin.register(EventRegistration)
+class EventRegistrationAdmin(admin.ModelAdmin):
+    change_list_template = "admin/surveys/eventregistration/change_list.html"
+    list_display = (
+        "company_name",
+        "contact_name",
+        "contact_phone",
+        "city",
+        "attendee_count",
+        "source_channel",
+        "feishu_status",
+        "submitted_at",
+    )
+    list_filter = ("project_count", "lawsuit_count", "source_channel", "submitted_at")
+    search_fields = (
+        "company_name",
+        "contact_name",
+        "contact_phone",
+        "city",
+        "attendees__name",
+        "attendees__phone",
+    )
+    readonly_fields = (
+        "id",
+        "company_name",
+        "contact_name",
+        "contact_phone",
+        "city",
+        "project_count",
+        "lawsuit_count",
+        "priority_issues_display",
+        "other_risk",
+        "source_channel",
+        "submitted_at",
+        "feishu_notified_at",
+        "feishu_error",
+    )
+    fields = readonly_fields
+    date_hierarchy = "submitted_at"
+    inlines = (AttendeeInline,)
+    actions = (
+        export_registration_csv,
+        export_registration_excel,
+        export_registration_markdown,
+    )
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).annotate(_attendee_count=Count("attendees"))
+
+    @admin.display(description="参会人数", ordering="_attendee_count")
+    def attendee_count(self, obj):
+        return obj._attendee_count
+
+    @admin.display(description="重点问题")
+    def priority_issues_display(self, obj):
+        return "\n".join(obj.priority_issue_labels())
+
+    @admin.display(description="飞书通知")
+    def feishu_status(self, obj):
+        if obj.feishu_notified_at:
+            return "已发送"
+        if obj.feishu_error.startswith("未配置"):
+            return "未启用"
+        return "发送失败" if obj.feishu_error else "待发送"
+
+    def changelist_view(self, request, extra_context=None):
+        response = super().changelist_view(request, extra_context=extra_context)
+        if not hasattr(response, "context_data"):
+            return response
+        queryset = response.context_data["cl"].queryset.prefetch_related("attendees")
+        registrations = list(queryset)
+        issue_counts = Counter(
+            issue for registration in registrations for issue in registration.priority_issues
+        )
+        source_counts = Counter(registration.source_channel for registration in registrations)
+        issue_labels = dict(EventRegistration.ISSUE_CHOICES)
+        source_labels = dict(EventRegistration.SOURCE_CHOICES)
+        response.context_data.update(
+            {
+                "registration_total": len(registrations),
+                "attendee_total": sum(item.attendees.count() for item in registrations),
+                "top_issues": [
+                    (issue_labels.get(key, key), count)
+                    for key, count in issue_counts.most_common(5)
+                ],
+                "source_stats": [
+                    (source_labels.get(key, key), count)
+                    for key, count in source_counts.most_common()
+                ],
+            }
+        )
+        return response
 
     def has_add_permission(self, request):
         return False

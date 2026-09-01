@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}报名成功{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'surveys/apply.css' %}?v=20260901-2">{% endblock %}
+{% block content %}
+<main class="apply-success-page">
+  <section class="apply-success-card">
+    <span class="apply-success-icon">✓</span>
+    <p class="apply-badge">提交成功</p>
+    <h1>报名信息已收到</h1>
+    <p>感谢您的报名。工作人员将根据您留下的联系方式确认席位并发送活动通知。</p>
+    <small>您现在可以安全关闭本页面。</small>
+  </section>
+</main>
+{% endblock %}

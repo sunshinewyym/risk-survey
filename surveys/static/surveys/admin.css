@@ -182,6 +182,14 @@ fieldset.module { margin-bottom: 20px; }
 #toolbar form input[type="submit"] { padding: 8px 16px; }
 .paginator { margin-top: 14px; border: 0 !important; border-radius: 12px; background: var(--admin-surface) !important; }
 .messagelist li { margin: 0 0 16px; border-radius: 12px; box-shadow: var(--admin-shadow); }
+.registration-stats { display: grid; grid-template-columns: 160px 160px minmax(220px, .8fr) minmax(320px, 1.5fr); gap: 12px; margin: 0 0 22px; }
+.registration-stats article { display: flex; flex-direction: column; gap: 9px; min-height: 112px; padding: 18px; border: 1px solid var(--hairline-color); border-radius: 15px; background: var(--admin-surface); box-shadow: var(--admin-shadow); }
+.registration-stats small { color: var(--body-quiet-color); font-weight: 700; }
+.registration-stats strong { font-size: 32px; color: var(--primary); }
+.registration-stats .stats-list { flex-direction: row; flex-wrap: wrap; align-content: flex-start; }
+.registration-stats .stats-list small { flex: 1 0 100%; }
+.registration-stats .stats-list span { padding: 5px 8px; color: var(--body-quiet-color); font-size: 11px; border-radius: 7px; background: var(--body-bg); }
+.registration-stats .stats-list b { color: var(--primary); }
 #recent-actions-module .actionlist { padding: 8px 18px; }
 body.login { background: radial-gradient(circle at 10% 0, #dceee7, transparent 34rem), var(--body-bg); }
 .login #container { width: min(440px, calc(100% - 32px)); margin-top: 9vh; border: 0; border-radius: 22px; background: var(--admin-surface); box-shadow: 0 28px 80px rgba(20, 62, 50, .17); }
@@ -196,6 +204,7 @@ body.login { background: radial-gradient(circle at 10% 0, #dceee7, transparent 3
   #header { flex-wrap: wrap; }
   #user-tools { order: 3; width: 100%; margin: 0; text-align: left; }
   .admin-shortcuts { margin-left: auto; }
+  .registration-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 720px) {
   #header { min-height: auto; padding: 14px 18px; }
@@ -208,4 +217,6 @@ body.login { background: radial-gradient(circle at 10% 0, #dceee7, transparent 3
   .object-tools { margin: 0 0 18px; float: none; }
   .submit-row { flex-wrap: wrap; }
   .submit-row p, .submit-row input { flex: 1 1 100%; }
+  .registration-stats { grid-template-columns: 1fr 1fr; }
+  .registration-stats .stats-list { grid-column: 1 / -1; }
 }

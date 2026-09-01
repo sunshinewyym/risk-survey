@@ -5,7 +5,7 @@
 
 {% block responsive %}
   {{ block.super }}
-  <link rel="stylesheet" href="{% static 'surveys/admin.css' %}?v=20260830">
+  <link rel="stylesheet" href="{% static 'surveys/admin.css' %}?v=20260901">
 {% endblock %}
 
 {% block branding %}
@@ -25,6 +25,8 @@
   {% if user.is_authenticated %}
     <nav class="admin-shortcuts" aria-label="常用功能">
       <a href="/" target="_blank" rel="noopener">查看公开问卷</a>
+      <a href="{% url 'surveys:event_registration' %}" target="_blank" rel="noopener">打开活动报名</a>
+      <a href="{% url 'admin:surveys_eventregistration_changelist' %}">报名统计</a>
       <a href="{% url 'admin:surveys_submission_changelist' %}">提交记录</a>
       <a class="shortcut-primary" href="{% url 'admin:surveys_survey_add' %}">＋ 新建问卷</a>
     </nav>

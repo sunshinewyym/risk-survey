@@ -2,8 +2,9 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
+from unittest.mock import patch
 
-from .models import Answer, Question, Submission, Survey
+from .models import Answer, Attendee, EventRegistration, Question, Submission, Survey
 
 
 HOSTS = override_settings(
@@ -107,6 +108,10 @@ class PublicSurveyTests(TestCase):
             fetch_redirect_response=False,
         )
         self.assertEqual(self.client.get(public_url, HTTP_HOST="survey.test").status_code, 200)
+        self.assertEqual(
+            self.client.get(reverse("surveys:default_survey"), HTTP_HOST="survey.test").status_code,
+            200,
+        )
         self.assertEqual(self.client.get("/admin/login/", HTTP_HOST="survey.test").status_code, 200)
 
 
@@ -167,3 +172,103 @@ class AdminTests(TestCase):
         )
         self.assertEqual(markdown_response.status_code, 200)
         self.assertIn("测试公司", markdown_response.content.decode("utf-8"))
+
+
+@HOSTS
+class EventRegistrationTests(TestCase):
+    def registration_data(self):
+        return {
+            "company_name": "广州示例建设有限公司",
+            "contact_name": "张三",
+            "contact_phone": "13800138000",
+            "city": "广州",
+            "project_count": "6_15",
+            "lawsuit_count": "1_3",
+            "priority_issues": ["management_fee", "project_review"],
+            "other_risk": "希望了解存量项目整改方案",
+            "source_channel": "channels",
+            "attendees-TOTAL_FORMS": "2",
+            "attendees-INITIAL_FORMS": "0",
+            "attendees-MIN_NUM_FORMS": "1",
+            "attendees-MAX_NUM_FORMS": "1000",
+            "attendees-0-name": "张三",
+            "attendees-0-role": "负责人",
+            "attendees-0-phone": "13800138000",
+            "attendees-1-name": "李四",
+            "attendees-1-role": "法务经理",
+            "attendees-1-phone": "13900139000",
+        }
+
+    def test_registration_requires_csrf_saves_attendees_and_notifies(self):
+        client = Client(enforce_csrf_checks=True, HTTP_HOST="survey.test")
+        url = reverse("surveys:event_registration")
+        page = client.get(url)
+        self.assertEqual(page.status_code, 200)
+        self.assertContains(page, "总包反背锅行动 001")
+        self.assertEqual(client.post(url, self.registration_data()).status_code, 403)
+        data = self.registration_data()
+        data["csrfmiddlewaretoken"] = client.cookies["csrftoken"].value
+        with patch(
+            "surveys.views.send_registration_notification", return_value=(True, "")
+        ) as notify:
+            response = client.post(url, data)
+        self.assertRedirects(
+            response,
+            reverse("surveys:event_registration_thanks"),
+            fetch_redirect_response=False,
+        )
+        registration = EventRegistration.objects.get()
+        self.assertEqual(registration.attendees.count(), 2)
+        self.assertIsNotNone(registration.feishu_notified_at)
+        notify.assert_called_once_with(registration)
+
+    def test_at_most_three_priority_issues(self):
+        data = self.registration_data()
+        data["priority_issues"] = [
+            "cooperation_model",
+            "management_fee",
+            "fees_and_tax",
+            "project_review",
+        ]
+        response = self.client.post(
+            reverse("surveys:event_registration"), data, HTTP_HOST="survey.test"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "最多选择 3 项")
+        self.assertFalse(EventRegistration.objects.exists())
+
+    def test_registration_admin_has_statistics_and_markdown_export(self):
+        user = get_user_model().objects.create_superuser("registration-admin", "", "password")
+        registration = EventRegistration.objects.create(
+            company_name="统计测试公司",
+            contact_name="王五",
+            contact_phone="13700137000",
+            city="深圳",
+            project_count="within_5",
+            lawsuit_count="none",
+            priority_issues=["project_review"],
+            source_channel="referral",
+        )
+        Attendee.objects.create(
+            registration=registration,
+            name="王五",
+            role="总经理",
+            phone="13700137000",
+        )
+        self.client.force_login(user)
+        changelist = reverse("admin:surveys_eventregistration_changelist")
+        page = self.client.get(changelist, HTTP_HOST="survey.test")
+        self.assertEqual(page.status_code, 200)
+        self.assertContains(page, "报名公司")
+        self.assertContains(page, "朋友转介绍")
+        response = self.client.post(
+            changelist,
+            {
+                "_selected_action": [str(registration.id)],
+                "index": "0",
+                "action": "export_registration_markdown",
+            },
+            HTTP_HOST="survey.test",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("统计测试公司", response.content.decode("utf-8"))

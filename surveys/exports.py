@@ -97,3 +97,112 @@ def markdown_response(queryset):
     response = HttpResponse(output.getvalue(), content_type="text/markdown; charset=utf-8")
     response["Content-Disposition"] = 'attachment; filename="survey-submissions.md"'
     return response
+
+
+def registration_export_table(queryset):
+    registrations = list(queryset.prefetch_related("attendees"))
+    headers = [
+        "报名编号",
+        "公司名称",
+        "联系人",
+        "联系电话",
+        "城市",
+        "参会人数",
+        "参会人员",
+        "合作项目数量",
+        "涉诉/追索数量",
+        "重点问题",
+        "其他风险",
+        "了解渠道",
+        "提交时间",
+        "飞书通知",
+    ]
+    rows = []
+    for registration in registrations:
+        attendees = "；".join(
+            f"{person.name} / {person.role} / {person.phone}"
+            for person in registration.attendees.all()
+        )
+        rows.append(
+            [
+                str(registration.id),
+                registration.company_name,
+                registration.contact_name,
+                registration.contact_phone,
+                registration.city,
+                registration.attendees.count(),
+                attendees,
+                registration.get_project_count_display(),
+                registration.get_lawsuit_count_display(),
+                "；".join(registration.priority_issue_labels()),
+                registration.other_risk,
+                registration.get_source_channel_display(),
+                timezone.localtime(registration.submitted_at).strftime("%Y-%m-%d %H:%M:%S"),
+                "已发送" if registration.feishu_notified_at else registration.feishu_error,
+            ]
+        )
+    return headers, rows
+
+
+def registration_csv_response(queryset):
+    response = HttpResponse(content_type="text/csv; charset=utf-8")
+    response["Content-Disposition"] = 'attachment; filename="event-registrations.csv"'
+    response.write("\ufeff")
+    writer = csv.writer(response)
+    headers, rows = registration_export_table(queryset)
+    writer.writerow(headers)
+    writer.writerows(rows)
+    return response
+
+
+def registration_xlsx_response(queryset):
+    headers, rows = registration_export_table(queryset)
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "活动报名"
+    sheet.append(headers)
+    for cell in sheet[1]:
+        cell.font = Font(bold=True)
+    for row in rows:
+        sheet.append(row)
+    sheet.freeze_panes = "A2"
+    for column in sheet.columns:
+        width = min(50, max(12, max(len(str(cell.value or "")) for cell in column) + 2))
+        sheet.column_dimensions[column[0].column_letter].width = width
+    output = BytesIO()
+    workbook.save(output)
+    response = HttpResponse(
+        output.getvalue(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    response["Content-Disposition"] = 'attachment; filename="event-registrations.xlsx"'
+    return response
+
+
+def registration_markdown_response(queryset):
+    registrations = list(queryset.prefetch_related("attendees"))
+    output = StringIO()
+    output.write("# 活动报名记录\n\n")
+    for registration in registrations:
+        output.write(f"## {registration.company_name}\n\n")
+        output.write(f"- 报名编号：{registration.id}\n")
+        output.write(f"- 联系人：{registration.contact_name} {registration.contact_phone}\n")
+        output.write(f"- 城市：{registration.city}\n")
+        output.write(f"- 合作项目数量：{registration.get_project_count_display()}\n")
+        output.write(f"- 涉诉/追索数量：{registration.get_lawsuit_count_display()}\n")
+        output.write(f"- 了解渠道：{registration.get_source_channel_display()}\n")
+        output.write("\n### 参会人员\n\n")
+        for person in registration.attendees.all():
+            output.write(f"- {person.name}｜{person.role}｜{person.phone}\n")
+        output.write("\n### 希望重点解答的问题\n\n")
+        for label in registration.priority_issue_labels():
+            output.write(f"- {label}\n")
+        if registration.other_risk:
+            output.write(f"\n### 其他风险\n\n{registration.other_risk}\n")
+        submitted_at = timezone.localtime(registration.submitted_at).strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+        output.write(f"\n提交时间：{submitted_at}\n\n---\n\n")
+    response = HttpResponse(output.getvalue(), content_type="text/markdown; charset=utf-8")
+    response["Content-Disposition"] = 'attachment; filename="event-registrations.md"'
+    return response

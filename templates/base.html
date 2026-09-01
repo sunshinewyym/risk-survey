@@ -7,8 +7,10 @@
   <meta name="robots" content="noindex, nofollow">
   <title>{% block title %}客户问卷{% endblock %} · ylaw team</title>
   <link rel="stylesheet" href="{% static 'surveys/app.css' %}?v=20260830-5">
+  {% block extra_css %}{% endblock %}
 </head>
 <body>
   {% block content %}{% endblock %}
+  {% block extra_js %}{% endblock %}
 </body>
 </html>

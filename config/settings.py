@@ -32,6 +32,8 @@ PUBLIC_HOST = os.getenv("DJANGO_PUBLIC_HOST", "survey.ylawteam.com").lower()
 DEFAULT_SURVEY_SLUG = os.getenv(
     "DJANGO_DEFAULT_SURVEY_SLUG", "joint-project-risk-diagnosis"
 )
+FEISHU_WEBHOOK_URL = os.getenv("FEISHU_WEBHOOK_URL", "")
+FEISHU_WEBHOOK_SECRET = os.getenv("FEISHU_WEBHOOK_SECRET", "")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -75,7 +77,7 @@ if env_bool("DJANGO_USE_SQLITE", False):
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "test.sqlite3",
+            "NAME": os.getenv("DJANGO_SQLITE_PATH", BASE_DIR / "test.sqlite3"),
         }
     }
 else:
@@ -104,7 +106,7 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_ROOT = os.getenv("DJANGO_STATIC_ROOT", BASE_DIR / "staticfiles")
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},

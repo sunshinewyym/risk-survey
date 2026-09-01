@@ -1,0 +1,17 @@
+{% extends "admin/change_list.html" %}
+
+{% block content %}
+  <section class="registration-stats" aria-label="报名统计">
+    <article><small>报名公司</small><strong>{{ registration_total }}</strong></article>
+    <article><small>参会人数</small><strong>{{ attendee_total }}</strong></article>
+    <article class="stats-list">
+      <small>来源渠道</small>
+      {% for label, count in source_stats %}<span>{{ label }} <b>{{ count }}</b></span>{% empty %}<span>暂无数据</span>{% endfor %}
+    </article>
+    <article class="stats-list stats-wide">
+      <small>最受关注的问题（前 5）</small>
+      {% for label, count in top_issues %}<span>{{ label }} <b>{{ count }}</b></span>{% empty %}<span>暂无数据</span>{% endfor %}
+    </article>
+  </section>
+  {{ block.super }}
+{% endblock %}
