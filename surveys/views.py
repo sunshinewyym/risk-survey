@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.db import connection, transaction
+from django.db import IntegrityError, connection, transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
@@ -71,34 +71,78 @@ def healthz(request):
 def event_registration(request):
     form = EventRegistrationForm(request.POST or None)
     attendee_formset = AttendeeFormSet(request.POST or None, prefix="attendees")
-    if request.method == "POST" and form.is_valid() and attendee_formset.is_valid():
-        with transaction.atomic():
-            registration = form.save()
-            Attendee.objects.bulk_create(
-                [
+    attendee_required_error = False
+    if request.method == "POST":
+        form_valid = form.is_valid()
+        formset_valid = attendee_formset.is_valid()
+        attendee_data = (
+            [
+                attendee_form.cleaned_data
+                for attendee_form in attendee_formset
+                if attendee_form.cleaned_data
+                and not attendee_form.cleaned_data.get("DELETE")
+            ]
+            if formset_valid
+            else []
+        )
+        attendee_required_error = (
+            form_valid
+            and form.cleaned_data["contact_attending"] is False
+            and not attendee_data
+        )
+        if form_valid and formset_valid and not attendee_required_error:
+            registration = form.save(commit=False)
+            registration.submission_token = form.cleaned_data["submission_token"]
+            attendees = []
+            seen_phones = set()
+            if registration.contact_attending:
+                attendees.append(
                     Attendee(
                         registration=registration,
-                        name=attendee_form.cleaned_data["name"],
-                        role=attendee_form.cleaned_data["role"],
-                        phone=attendee_form.cleaned_data["phone"],
+                        name=registration.contact_name,
+                        role=registration.contact_role,
+                        phone=registration.contact_phone,
                     )
-                    for attendee_form in attendee_formset
-                    if attendee_form.cleaned_data
-                    and not attendee_form.cleaned_data.get("DELETE")
-                ]
-            )
-        notified, status = send_registration_notification(registration)
-        registration.feishu_error = status
-        if notified:
-            from django.utils import timezone
+                )
+                seen_phones.add(registration.contact_phone)
+            for person in attendee_data:
+                if person["phone"] in seen_phones:
+                    continue
+                attendees.append(
+                    Attendee(
+                        registration=registration,
+                        name=person["name"],
+                        role=person["role"],
+                        phone=person["phone"],
+                    )
+                )
+                seen_phones.add(person["phone"])
+            try:
+                with transaction.atomic():
+                    registration.save()
+                    Attendee.objects.bulk_create(attendees)
+            except IntegrityError:
+                if EventRegistration.objects.filter(
+                    submission_token=form.cleaned_data["submission_token"]
+                ).exists():
+                    return redirect("surveys:event_registration_thanks")
+                raise
+            notified, status = send_registration_notification(registration)
+            registration.feishu_error = status
+            if notified:
+                from django.utils import timezone
 
-            registration.feishu_notified_at = timezone.now()
-        registration.save(update_fields=("feishu_notified_at", "feishu_error"))
-        return redirect("surveys:event_registration_thanks")
+                registration.feishu_notified_at = timezone.now()
+            registration.save(update_fields=("feishu_notified_at", "feishu_error"))
+            return redirect("surveys:event_registration_thanks")
     return render(
         request,
         "surveys/apply.html",
-        {"form": form, "attendee_formset": attendee_formset},
+        {
+            "form": form,
+            "attendee_formset": attendee_formset,
+            "attendee_required_error": attendee_required_error,
+        },
     )
 
 

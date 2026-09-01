@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import re
+import uuid
 
 from django import forms
 from django.forms import formset_factory
@@ -11,6 +12,20 @@ PHONE_PATTERN = r"^1[3-9]\d{9}$"
 
 
 class EventRegistrationForm(forms.ModelForm):
+    submission_token = forms.UUIDField(widget=forms.HiddenInput, initial=uuid.uuid4)
+    contact_attending = forms.TypedChoiceField(
+        label="联系人本人是否参会？",
+        choices=((True, "是，本人参会"), (False, "否，仅负责报名对接")),
+        coerce=lambda value: value == "True",
+        empty_value=None,
+        widget=forms.RadioSelect,
+        error_messages={"required": "请选择联系人本人是否参会"},
+    )
+    contact_role = forms.CharField(
+        label="联系人职务",
+        required=False,
+        widget=forms.TextInput(attrs={"placeholder": "如：总经理 / 财务负责人"}),
+    )
     project_count = forms.ChoiceField(
         label="公司目前与外部合作的项目数量",
         choices=EventRegistration.PROJECT_CHOICES,
@@ -43,6 +58,8 @@ class EventRegistrationForm(forms.ModelForm):
             "company_name",
             "contact_name",
             "contact_phone",
+            "contact_attending",
+            "contact_role",
             "city",
             "project_count",
             "lawsuit_count",
@@ -86,6 +103,17 @@ class EventRegistrationForm(forms.ModelForm):
             raise forms.ValidationError("建议最多选择 3 项，请留下您最急需的问题")
         return issues
 
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get("contact_attending") is True:
+            role = cleaned_data.get("contact_role", "").strip()
+            if not role:
+                self.add_error("contact_role", "请填写联系人职务")
+            cleaned_data["contact_role"] = role
+        else:
+            cleaned_data["contact_role"] = ""
+        return cleaned_data
+
 
 class AttendeeForm(forms.ModelForm):
     class Meta:
@@ -114,8 +142,8 @@ class AttendeeForm(forms.ModelForm):
 AttendeeFormSet = formset_factory(
     AttendeeForm,
     extra=0,
-    min_num=1,
-    validate_min=True,
+    min_num=0,
+    validate_min=False,
     can_delete=True,
 )
 

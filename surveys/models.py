@@ -166,9 +166,12 @@ class EventRegistration(models.Model):
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    submission_token = models.UUIDField("提交凭证", unique=True, null=True, editable=False)
     company_name = models.CharField("公司名称", max_length=200)
     contact_name = models.CharField("联系人", max_length=80)
     contact_phone = models.CharField("联系电话", max_length=20, db_index=True)
+    contact_attending = models.BooleanField("联系人本人是否参会", null=True, blank=True)
+    contact_role = models.CharField("联系人职务", max_length=100, blank=True)
     city = models.CharField("公司所在城市", max_length=80)
     project_count = models.CharField("外部合作项目数量", max_length=20, choices=PROJECT_CHOICES)
     lawsuit_count = models.CharField("过往涉诉/被追索案件数量", max_length=20, choices=LAWSUIT_CHOICES)

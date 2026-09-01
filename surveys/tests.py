@@ -4,6 +4,7 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from html import unescape
 from unittest.mock import patch
+import uuid
 
 from .models import Answer, Attendee, EventRegistration, Question, Submission, Survey
 
@@ -179,9 +180,12 @@ class AdminTests(TestCase):
 class EventRegistrationTests(TestCase):
     def registration_data(self):
         return {
+            "submission_token": str(uuid.uuid4()),
             "company_name": "广州示例建设有限公司",
             "contact_name": "张三",
             "contact_phone": "13800138000",
+            "contact_attending": "True",
+            "contact_role": "负责人",
             "city": "广州",
             "project_count": "6_15",
             "lawsuit_count": "1_3",
@@ -220,19 +224,40 @@ class EventRegistrationTests(TestCase):
             "surveys.views.send_registration_notification", return_value=(True, "")
         ) as notify:
             response = client.post(url, data)
+            duplicate_response = client.post(url, data)
         self.assertRedirects(
             response,
             reverse("surveys:event_registration_thanks"),
             fetch_redirect_response=False,
         )
+        self.assertRedirects(
+            duplicate_response,
+            reverse("surveys:event_registration_thanks"),
+            fetch_redirect_response=False,
+        )
+        self.assertEqual(EventRegistration.objects.count(), 1)
         registration = EventRegistration.objects.get()
+        self.assertIs(registration.contact_attending, True)
         self.assertEqual(registration.attendees.count(), 2)
+        self.assertEqual(registration.attendees.first().name, "张三")
         self.assertIsNotNone(registration.feishu_notified_at)
         notify.assert_called_once_with(registration)
         success_page = client.get(reverse("surveys:event_registration_thanks"))
         self.assertContains(success_page, "报名信息已收到")
         self.assertNotContains(success_page, "问卷摘要")
         self.assertNotContains(success_page, "13900139000")
+
+    def test_non_attending_contact_requires_an_actual_attendee(self):
+        data = self.registration_data()
+        data["contact_attending"] = "False"
+        data["contact_role"] = ""
+        data["attendees-TOTAL_FORMS"] = "0"
+        response = self.client.post(
+            reverse("surveys:event_registration"), data, HTTP_HOST="survey.test"
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "联系人不参会时，请至少添加 1 位实际参会人员")
+        self.assertFalse(EventRegistration.objects.exists())
 
     def test_at_most_three_priority_issues(self):
         data = self.registration_data()

@@ -2,25 +2,50 @@
   const form = document.querySelector("#apply-form");
   if (!form) return;
   const list = document.querySelector("#attendee-list");
+  const attendeeField = document.querySelector("#attendee-field");
   const total = document.querySelector("#id_attendees-TOTAL_FORMS");
   const attendeeCount = document.querySelector("#attendee-count");
   const template = document.querySelector("#attendee-template");
+  const contactAttendanceInputs = [...form.querySelectorAll('input[name="contact_attending"]')];
+  const contactRoleField = document.querySelector("#contact-role-field");
+  const contactRoleInput = document.querySelector("#id_contact_role");
   const alertBox = document.querySelector("#apply-alert");
   const issueCount = document.querySelector("#issue-count");
   const issueLimit = document.querySelector("#issue-limit");
+  const submitButton = form.querySelector('button[type="submit"]');
+  let submitting = false;
 
   function activeAttendees() {
     return [...list.querySelectorAll(".attendee-item")].filter((item) => !item.hidden);
+  }
+
+  function contactIsAttending() {
+    return contactAttendanceInputs.find((input) => input.checked)?.value === "True";
   }
 
   function refreshAttendees() {
     const active = activeAttendees();
     active.forEach((item, index) => {
       item.querySelector(".attendee-number").textContent = index + 1;
-      item.querySelector(".remove-attendee").hidden = active.length === 1;
+      item.querySelector(".remove-attendee").hidden = false;
+      item.querySelectorAll("input:not([name$='-DELETE'])").forEach((input) => {
+        input.required = true;
+      });
     });
-    attendeeCount.textContent = active.length;
+    attendeeCount.textContent = active.length + (contactIsAttending() ? 1 : 0);
   }
+
+  function refreshContactAttendance() {
+    const attending = contactIsAttending();
+    contactRoleField.hidden = !attending;
+    contactRoleInput.disabled = !attending;
+    contactRoleInput.required = attending;
+    refreshAttendees();
+  }
+
+  contactAttendanceInputs.forEach((input) =>
+    input.addEventListener("change", refreshContactAttendance)
+  );
 
   document.querySelector("#add-attendee").addEventListener("click", () => {
     const index = Number(total.value);
@@ -33,7 +58,7 @@
 
   list.addEventListener("click", (event) => {
     const button = event.target.closest(".remove-attendee");
-    if (!button || activeAttendees().length === 1) return;
+    if (!button) return;
     const item = button.closest(".attendee-item");
     const deleteInput = item.querySelector('input[name$="-DELETE"]');
     if (deleteInput) deleteInput.checked = true;
@@ -65,6 +90,10 @@
   });
 
   form.addEventListener("submit", (event) => {
+    if (submitting) {
+      event.preventDefault();
+      return;
+    }
     form.querySelectorAll(".client-error").forEach((error) => error.remove());
     form.querySelectorAll(".invalid").forEach((item) => item.classList.remove("invalid"));
     const invalidInputs = [...form.querySelectorAll(":invalid")].filter(
@@ -76,7 +105,16 @@
     if (!issueInputs.some((input) => input.checked)) {
       containers.push(document.querySelector(".issue-field"));
     }
-    if (!containers.length) return;
+    if (!contactIsAttending() && contactAttendanceInputs.some((input) => input.checked)
+        && !activeAttendees().length) {
+      containers.push(attendeeField);
+    }
+    if (!containers.length) {
+      submitting = true;
+      submitButton.disabled = true;
+      submitButton.textContent = "正在提交…";
+      return;
+    }
     event.preventDefault();
     containers.forEach((container) => {
       container.classList.add("invalid");
@@ -93,7 +131,7 @@
     window.setTimeout(() => (invalidInputs[0] || issueInputs[0])?.focus({preventScroll: true}), 350);
   });
 
-  refreshAttendees();
+  refreshContactAttendance();
   issueCount.textContent = issueInputs.filter((input) => input.checked).length;
   const serverError = form.querySelector(".invalid");
   if (serverError) window.setTimeout(() => serverError.scrollIntoView({block: "center"}), 80);

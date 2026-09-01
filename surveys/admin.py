@@ -180,6 +180,8 @@ class EventRegistrationAdmin(admin.ModelAdmin):
         "company_name",
         "contact_name",
         "contact_phone",
+        "contact_attending",
+        "contact_role",
         "city",
         "attendee_count",
         "source_channel",

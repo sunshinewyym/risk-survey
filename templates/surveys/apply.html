@@ -2,7 +2,7 @@
 {% load static %}
 {% block title %}总包反背锅行动 001｜报名问卷{% endblock %}
 {% block title_suffix %}{% endblock %}
-{% block extra_css %}<link rel="stylesheet" href="{% static 'surveys/apply.css' %}?v=20260901-4">{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'surveys/apply.css' %}?v=20260901-8">{% endblock %}
 {% block content %}
 <main class="apply-shell">
   <header class="apply-hero">
@@ -17,6 +17,7 @@
 
   <form method="post" id="apply-form" class="apply-card" novalidate>
     {% csrf_token %}
+    {{ form.submission_token }}
     {{ attendee_formset.management_form }}
     <div id="apply-alert" class="apply-alert" role="alert" tabindex="-1"{% if not form.errors and not attendee_formset.errors %} hidden{% endif %}>
       <strong>还有必填项未完成，请检查标红部分</strong>
@@ -31,10 +32,17 @@
         <div class="apply-field{% if form.city.errors %} invalid{% endif %}" data-error="请填写公司所在城市"><label for="{{ form.city.id_for_label }}">公司所在城市<em>*</em></label>{{ form.city }}{% for error in form.city.errors %}<p class="apply-error">{{ error }}</p>{% endfor %}</div>
       </div>
 
-      <div class="attendee-heading"><div><h3>报名人数<em>*</em></h3></div><strong>已登记 <span id="attendee-count">1</span> 人</strong></div>
-      <div class="attendee-heading"><div><h3>参会人员信息<em>*</em><small>一家公司可登记多人</small></h3></div></div>
-      {% if attendee_formset.non_form_errors %}<div class="apply-error formset-error">{{ attendee_formset.non_form_errors|striptags }}</div>{% endif %}
-      <div id="attendee-list" class="attendee-list">
+      <div class="apply-grid contact-attendance-grid">
+        <div id="contact-attending-field" class="apply-field choice-field{% if form.contact_attending.errors %} invalid{% endif %}" data-error="请选择联系人本人是否参会"><label>{{ form.contact_attending.label }}<em>*</em></label><div class="apply-options contact-attending-options">{{ form.contact_attending }}</div>{% for error in form.contact_attending.errors %}<p class="apply-error">{{ error }}</p>{% endfor %}</div>
+        <div id="contact-role-field" class="apply-field{% if form.contact_role.errors %} invalid{% endif %}" data-error="请填写联系人职务"{% if form.contact_attending.value != "True" %} hidden{% endif %}><label for="{{ form.contact_role.id_for_label }}">联系人职务<em>*</em></label>{{ form.contact_role }}{% for error in form.contact_role.errors %}<p class="apply-error">{{ error }}</p>{% endfor %}</div>
+      </div>
+
+      <div id="attendee-field" class="apply-field attendee-field{% if attendee_required_error %} invalid{% endif %}" data-error="联系人不参会时，请至少添加 1 位实际参会人员">
+        <div class="attendee-heading"><div><h3>预计参会人数</h3></div><strong>已登记 <span id="attendee-count">0</span> 人</strong></div>
+        <div class="attendee-heading"><div><h3>参会人员信息<small>联系人参会时自动计入，还可继续添加其他人员</small></h3></div></div>
+        {% if attendee_formset.non_form_errors %}<div class="apply-error formset-error">{{ attendee_formset.non_form_errors|striptags }}</div>{% endif %}
+        {% if attendee_required_error %}<p class="apply-error">联系人不参会时，请至少添加 1 位实际参会人员</p>{% endif %}
+        <div id="attendee-list" class="attendee-list">
         {% for attendee in attendee_formset %}
           <article class="attendee-item{% if attendee.errors %} invalid{% endif %}"{% if attendee.DELETE.value %} hidden{% endif %}>
             <header><span class="attendee-number" hidden>{{ forloop.counter }}</span><button type="button" class="remove-attendee" title="删除该参会人员">×</button></header>
@@ -46,9 +54,9 @@
             </div>
           </article>
         {% endfor %}
-      </div>
-      <button type="button" id="add-attendee" class="add-attendee">＋ 添加参会人员</button>
-      <template id="attendee-template">
+        </div>
+        <button type="button" id="add-attendee" class="add-attendee">＋ 添加参会人员</button>
+        <template id="attendee-template">
         <article class="attendee-item">
           <header><span class="attendee-number" hidden></span><button type="button" class="remove-attendee" title="删除该参会人员">×</button></header>
           <span hidden>{{ attendee_formset.empty_form.DELETE }}</span>
@@ -58,7 +66,8 @@
             <div class="apply-field" data-error="请填写 11 位手机号"><label for="{{ attendee_formset.empty_form.phone.id_for_label }}">联系电话<em>*</em></label>{{ attendee_formset.empty_form.phone }}</div>
           </div>
         </article>
-      </template>
+        </template>
+      </div>
     </section>
 
     <section class="apply-section">
@@ -92,4 +101,4 @@
   <footer class="apply-footer"><strong>一片叶律师 ｜ 工程风险观察局 · 总包反背锅行动 001</strong><span>让合作有边界，让经营有控制，让公司有退路。总包不当背锅侠。</span></footer>
 </main>
 {% endblock %}
-{% block extra_js %}<script src="{% static 'surveys/apply.js' %}?v=20260901-2" defer></script>{% endblock %}
+{% block extra_js %}<script src="{% static 'surveys/apply.js' %}?v=20260901-4" defer></script>{% endblock %}
