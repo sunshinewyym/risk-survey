@@ -57,7 +57,7 @@
   }));
 
   form.addEventListener("input", (event) => {
-    const container = event.target.closest(".apply-field, .attendee-item");
+    const container = event.target.closest(".apply-field");
     if (container && event.target.checkValidity()) {
       container.classList.remove("invalid");
       container.querySelectorAll(".client-error").forEach((error) => error.remove());
@@ -71,7 +71,7 @@
       (input) => !input.disabled && !input.closest("[hidden]")
     );
     const containers = [...new Set(invalidInputs.map((input) =>
-      input.closest(".apply-field, .attendee-item")
+      input.closest(".apply-field")
     ).filter(Boolean))];
     if (!issueInputs.some((input) => input.checked)) {
       containers.push(document.querySelector(".issue-field"));
@@ -83,12 +83,12 @@
       if (!container.querySelector(".apply-error")) {
         const error = document.createElement("p");
         error.className = "apply-error client-error";
-        error.textContent = "请完成此必填项";
+        error.textContent = container.dataset.error || "还有必填项未完成，请检查标红部分";
         container.append(error);
       }
     });
     alertBox.hidden = false;
-    alertBox.querySelector("strong").textContent = `还有 ${containers.length} 处信息未完成`;
+    alertBox.querySelector("strong").textContent = "还有必填项未完成，请检查标红部分";
     containers[0].scrollIntoView({behavior: "smooth", block: "center"});
     window.setTimeout(() => (invalidInputs[0] || issueInputs[0])?.focus({preventScroll: true}), 350);
   });

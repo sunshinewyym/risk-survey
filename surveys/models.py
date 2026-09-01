@@ -153,16 +153,16 @@ class EventRegistration(models.Model):
         ("other", "其他"),
     ]
     ISSUE_CHOICES = [
-        ("cooperation_model", "新规下，挂靠、联营项目还能否继续开展，怎样更安全？"),
-        ("management_fee", "合作协议无效后，公司约定的管理费还能否收取？"),
-        ("fees_and_tax", "管理费和税费应如何约定、收取，避免被合作方追回？"),
-        ("internal_contracting", "项目团队购买公司社保后，能否认定为内部承包？"),
-        ("project_review", "接项目前，应重点审查项目和合作方的哪些情况？"),
-        ("external_liability", "合作方对外签约、欠款或私刻公章，公司如何避免担责？"),
-        ("invoice_risk", "合作方指定供应商虚开发票，公司如何处理并追责？"),
-        ("existing_projects", "新规之后，存量合作项目应如何做好风险防控？"),
-        ("project_control", "工程款、结算和资料被合作方控制，公司如何拿回主动权？"),
-        ("takeover_exit", "合作方失联、资金链断裂或项目亏损时，如何接管、止损和退出？"),
+        ("cooperation_model", "1. 司法解释二出台后，挂靠、联营项目还能不能继续做？怎么做更安全？"),
+        ("management_fee", "2. 挂靠协议无效后，公司约定的管理费还能不能收？"),
+        ("fees_and_tax", "3. 管理费和税费到底应该怎么约定、怎么收，才能避免被项目老板追回？"),
+        ("internal_contracting", '4. 项目老板及其团队在公司购买社保，是否就能变成"内部承包"？这种模式真的比挂靠更安全吗？'),
+        ("project_review", "5. 一个合作项目能不能接？公司在接项目前应该重点审查项目和项目老板的哪些情况？"),
+        ("external_liability", "6. 项目老板对外签合同、欠材料款或者私刻公章，公司怎样避免替他承担责任？"),
+        ("invoice_risk", "7. 项目老板指定的供应商虚开发票，导致公司被税务稽查，公司应该怎么处理和追责？"),
+        ("existing_projects", "8. 新规之后，手上正在做的挂靠项目，该怎么做好风险防控？"),
+        ("project_control", "9. 项目结算、工程款和关键资料被项目老板控制，公司怎样拿回主动权？"),
+        ("takeover_exit", "10. 项目老板失联、去世、资金链断裂或者项目亏损，公司应该怎样接管、止损和退出？"),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

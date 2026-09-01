@@ -22,9 +22,7 @@ def _message(registration):
         f"{person.name}（{person.role}，{person.phone}）"
         for person in registration.attendees.all()
     )
-    issues = "\n".join(f"{index}. {label}" for index, label in enumerate(
-        registration.priority_issue_labels(), start=1
-    ))
+    issues = "\n".join(registration.priority_issue_labels())
     submitted_at = timezone.localtime(registration.submitted_at).strftime("%Y-%m-%d %H:%M:%S")
     return (
         "【活动报名提醒】\n"

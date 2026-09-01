@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
+from html import unescape
 from unittest.mock import patch
 
 from .models import Answer, Attendee, EventRegistration, Question, Submission, Survey
@@ -205,6 +206,13 @@ class EventRegistrationTests(TestCase):
         page = client.get(url)
         self.assertEqual(page.status_code, 200)
         self.assertContains(page, "总包反背锅行动 001")
+        self.assertContains(page, "项目是他的，责任为什么是你的？")
+        self.assertContains(page, "用于现场内容深浅调节与客户分层，数据仅内部使用")
+        self.assertContains(page, "可多选，建议最多选择 3 项")
+        self.assertContains(page, "一片叶律师 ｜ 工程风险观察局 · 总包反背锅行动 001")
+        page_text = unescape(page.content.decode("utf-8"))
+        for _, label in EventRegistration.ISSUE_CHOICES:
+            self.assertIn(label, page_text)
         self.assertEqual(client.post(url, self.registration_data()).status_code, 403)
         data = self.registration_data()
         data["csrfmiddlewaretoken"] = client.cookies["csrftoken"].value
@@ -221,6 +229,10 @@ class EventRegistrationTests(TestCase):
         self.assertEqual(registration.attendees.count(), 2)
         self.assertIsNotNone(registration.feishu_notified_at)
         notify.assert_called_once_with(registration)
+        summary = client.get(reverse("surveys:event_registration_thanks"))
+        self.assertContains(summary, "问卷摘要（请复制后发送给您的对接顾问）")
+        self.assertContains(summary, "参会人员2：李四｜法务经理｜13900139000")
+        self.assertContains(summary, "—— 请主办方查收并归档 ——")
 
     def test_at_most_three_priority_issues(self):
         data = self.registration_data()
@@ -234,7 +246,7 @@ class EventRegistrationTests(TestCase):
             reverse("surveys:event_registration"), data, HTTP_HOST="survey.test"
         )
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "最多选择 3 项")
+        self.assertContains(response, "建议最多选择 3 项，请留下您最急需的问题")
         self.assertFalse(EventRegistration.objects.exists())
 
     def test_registration_admin_has_statistics_and_markdown_export(self):
