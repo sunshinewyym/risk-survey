@@ -94,7 +94,6 @@ def event_registration(request):
 
             registration.feishu_notified_at = timezone.now()
         registration.save(update_fields=("feishu_notified_at", "feishu_error"))
-        request.session["latest_event_registration_id"] = str(registration.pk)
         return redirect("surveys:event_registration_thanks")
     return render(
         request,
@@ -104,39 +103,4 @@ def event_registration(request):
 
 
 def event_registration_thanks(request):
-    registration = get_object_or_404(
-        EventRegistration.objects.prefetch_related("attendees"),
-        pk=request.session.get("latest_event_registration_id"),
-    )
-    lines = [
-        "【报名问卷 · 总包反背锅行动 001】",
-        f"公司名称：{registration.company_name}",
-        f"联系人：{registration.contact_name}｜电话：{registration.contact_phone}",
-        f"公司所在城市：{registration.city}",
-        f"报名人数：{registration.attendees.count()} 人",
-    ]
-    lines.extend(
-        f"参会人员{index}：{person.name}｜{person.role}｜{person.phone}"
-        for index, person in enumerate(registration.attendees.all(), start=1)
-    )
-    lines.extend(
-        [
-            f"外部合作项目数量：{registration.get_project_count_display()}",
-            f"过往涉诉/被追索案件：{registration.get_lawsuit_count_display()}",
-            "最希望重点解答的问题：",
-        ]
-    )
-    lines.extend(f"  · {label}" for label in registration.priority_issue_labels())
-    if registration.other_risk:
-        lines.append(f"最急需解决的合作项目风险（自述）：{registration.other_risk}")
-    lines.extend(
-        [
-            f"来源渠道：{registration.get_source_channel_display()}",
-            "—— 请主办方查收并归档 ——",
-        ]
-    )
-    return render(
-        request,
-        "surveys/apply_thanks.html",
-        {"registration_summary": "\n".join(lines)},
-    )
+    return render(request, "surveys/apply_thanks.html")

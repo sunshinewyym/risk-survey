@@ -229,10 +229,10 @@ class EventRegistrationTests(TestCase):
         self.assertEqual(registration.attendees.count(), 2)
         self.assertIsNotNone(registration.feishu_notified_at)
         notify.assert_called_once_with(registration)
-        summary = client.get(reverse("surveys:event_registration_thanks"))
-        self.assertContains(summary, "问卷摘要（请复制后发送给您的对接顾问）")
-        self.assertContains(summary, "参会人员2：李四｜法务经理｜13900139000")
-        self.assertContains(summary, "—— 请主办方查收并归档 ——")
+        success_page = client.get(reverse("surveys:event_registration_thanks"))
+        self.assertContains(success_page, "报名信息已收到")
+        self.assertNotContains(success_page, "问卷摘要")
+        self.assertNotContains(success_page, "13900139000")
 
     def test_at_most_three_priority_issues(self):
         data = self.registration_data()

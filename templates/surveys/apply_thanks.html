@@ -1,19 +1,15 @@
 {% extends "base.html" %}
 {% load static %}
-{% block title %}总包反背锅行动 001｜报名问卷{% endblock %}
-{% block title_suffix %}{% endblock %}
+{% block title %}报名成功{% endblock %}
 {% block extra_css %}<link rel="stylesheet" href="{% static 'surveys/apply.css' %}?v=20260901-4">{% endblock %}
 {% block content %}
 <main class="apply-success-page">
-  <section class="apply-success-card apply-result">
-    <h3>问卷摘要（请复制后发送给您的对接顾问）</h3>
-    <pre id="registration-summary">{{ registration_summary }}</pre>
-    <div class="summary-actions">
-      <button type="button" class="copybtn" id="copy-summary">一键复制</button>
-      <button type="button" class="printbtn" id="print-summary">打印 / 存 PDF</button>
-    </div>
+  <section class="apply-success-card">
+    <span class="apply-success-icon">✓</span>
+    <p class="apply-badge">提交成功</p>
+    <h1>报名信息已收到</h1>
+    <p>感谢您的报名。工作人员将根据您留下的联系方式确认席位并发送活动通知。</p>
+    <small>您现在可以安全关闭本页面。</small>
   </section>
-  <footer class="apply-footer"><strong>一片叶律师 ｜ 工程风险观察局 · 总包反背锅行动 001</strong><span>让合作有边界，让经营有控制，让公司有退路。总包不当背锅侠。</span></footer>
 </main>
 {% endblock %}
-{% block extra_js %}<script src="{% static 'surveys/apply_summary.js' %}?v=20260901-1" defer></script>{% endblock %}
