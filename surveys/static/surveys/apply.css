@@ -2,8 +2,8 @@
 body { background: radial-gradient(circle at 8% 0, #d8e7f5, transparent 34rem), #f3f6fa; }
 .apply-shell { width: min(820px, calc(100% - 32px)); margin: 36px auto 24px; }
 .apply-hero { overflow: hidden; color: #fff; border-radius: 22px 22px 0 0; background: linear-gradient(135deg, #0c2d5a, #1d568a); box-shadow: 0 24px 70px rgba(19, 48, 88, .18); }
-.apply-brand { display: flex; gap: 10px; align-items: center; padding: 16px 34px; border-bottom: 1px solid rgba(255,255,255,.13); }
-.apply-brand > span { display: grid; width: 34px; height: 34px; place-items: center; color: var(--apply-navy); font-weight: 900; border-radius: 10px; background: #fff; }
+.apply-brand { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 14px 34px; border-bottom: 1px solid rgba(255,255,255,.13); }
+.apply-brand .lawyer-y-logo { width: 126px; }
 .apply-brand p { margin: 0; font-size: 15px; font-weight: 800; }
 .apply-brand small { display: block; margin-top: 2px; color: #bcd3ea; font-size: 9px; letter-spacing: .1em; }
 .hero-copy { position: relative; padding: 42px 48px 46px; }
@@ -65,3 +65,4 @@ body { background: radial-gradient(circle at 8% 0, #d8e7f5, transparent 34rem), 
 .apply-footer { display: grid; gap: 5px; padding: 20px; color: #778598; font-size: 12px; line-height: 1.6; text-align: center; }.apply-footer strong { color: #536276; }.apply-footer span { display: block; }
 .apply-success-page { display: grid; min-height: 100vh; place-items: center; padding: 28px; background: radial-gradient(circle at 10% 0, #d8e7f5, transparent 36rem), #f3f6fa; }.apply-success-card { width: min(560px, 100%); padding: 50px 38px; text-align: center; border: 1px solid var(--apply-line); border-radius: 22px; background: #fff; box-shadow: 0 26px 80px rgba(19,48,88,.14); }.apply-success-icon { display: grid; width: 60px; height: 60px; margin: 0 auto 20px; place-items: center; color: #fff; font-size: 26px; font-weight: 900; border-radius: 50%; background: var(--apply-blue); }.apply-success-card h1 { margin: 0 0 13px; color: var(--apply-ink); font-size: 30px; }.apply-success-card > p:not(.apply-badge) { margin: 0; color: var(--apply-muted); line-height: 1.8; }.apply-success-card small { display: block; margin-top: 22px; color: #8995a4; }
 @media (max-width: 720px) { .apply-shell { width: 100%; margin: 0; }.apply-hero, .apply-card, .apply-actions { border-radius: 0; }.apply-brand { padding: 14px 20px; }.hero-copy { padding: 34px 22px 38px; }.hero-copy::after { right: 10px; }.apply-alert { margin: 0 18px; }.apply-section { padding: 32px 20px 3px; }.apply-grid, .attendee-grid, .issue-options > div { grid-template-columns: 1fr; }.apply-options > div, .source-options > div { grid-template-columns: 1fr 1fr; }.attendee-item { padding: 13px; }.apply-actions { position: sticky; z-index: 12; bottom: 0; padding: 13px 20px; box-shadow: 0 -10px 26px rgba(16,47,92,.16); }.apply-actions p { display: none; }.apply-actions button { width: 100%; }.apply-footer { background: #f3f6fa; } }
+@media (max-width: 720px) { .contact-attending-options > div > div { display: flex; }.contact-attending-options label { width: 100%; height: 100%; } }

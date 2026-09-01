@@ -4,7 +4,10 @@
 {% block content %}
 <main class="survey-shell">
   <header class="survey-hero">
-    <p class="eyebrow">YLAW TEAM · CLIENT SURVEY</p>
+    <div class="survey-brand">
+      <span class="brand-logo-panel"><span class="lawyer-y-logo" role="img" aria-label="Lawyer Y 一片叶律师"></span></span>
+      <p class="eyebrow">一片叶律师 · 客户问卷</p>
+    </div>
     <h1>{{ survey.title }}</h1>
     {% if survey.description %}<p class="hero-lead">{{ survey.description|linebreaksbr }}</p>{% endif %}
   </header>
@@ -45,7 +48,7 @@
       </footer>
     </form>
   </section>
-  <footer class="public-footer">ylaw team · 客户信息仅用于本次服务沟通与分析</footer>
+  <footer class="public-footer">一片叶律师 · 客户信息仅用于本次服务沟通与分析</footer>
 </main>
 <script src="{% static 'surveys/form.js' %}?v=20260830-3" defer></script>
 {% endblock %}

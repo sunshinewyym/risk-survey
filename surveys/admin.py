@@ -16,9 +16,9 @@ from .forms import QuestionAdminForm
 from .models import Answer, Attendee, EventRegistration, Question, Submission, Survey
 
 
-admin.site.site_header = "ylaw-survey 问卷管理"
-admin.site.site_title = "ylaw-survey"
-admin.site.index_title = "客户问卷与提交记录"
+admin.site.site_header = "一片叶律师"
+admin.site.site_title = "一片叶律师"
+admin.site.index_title = "表单中心"
 
 
 class QuestionInline(admin.StackedInline):
@@ -54,6 +54,11 @@ class SurveyAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(_submission_count=Count("submissions"))
 
+    def changelist_view(self, request, extra_context=None):
+        return super().changelist_view(
+            request, extra_context={"title": "普通问卷", **(extra_context or {})}
+        )
+
     @admin.display(description="提交数", ordering="_submission_count")
     def submission_count(self, obj):
         return obj._submission_count
@@ -70,6 +75,9 @@ class QuestionAdmin(admin.ModelAdmin):
     list_filter = ("survey", "question_type", "required", "section")
     search_fields = ("label", "help_text", "survey__title")
     ordering = ("survey", "order")
+
+    def has_module_permission(self, request):
+        return False
 
 
 class AnswerInline(admin.TabularInline):
@@ -125,6 +133,11 @@ class SubmissionAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         return super().get_queryset(request).annotate(_answer_count=Count("answers"))
 
+    def changelist_view(self, request, extra_context=None):
+        return super().changelist_view(
+            request, extra_context={"title": "普通问卷数据", **(extra_context or {})}
+        )
+
     def get_search_results(self, request, queryset, search_term):
         queryset, use_distinct = super().get_search_results(request, queryset, search_term)
         if search_term:
@@ -155,6 +168,9 @@ class AnswerAdmin(admin.ModelAdmin):
     readonly_fields = ("submission", "question", "question_label", "value", "display_value")
 
     def has_add_permission(self, request):
+        return False
+
+    def has_module_permission(self, request):
         return False
 
 
@@ -241,8 +257,10 @@ class EventRegistrationAdmin(admin.ModelAdmin):
         return "发送失败" if obj.feishu_error else "待发送"
 
     def changelist_view(self, request, extra_context=None):
-        response = super().changelist_view(request, extra_context=extra_context)
-        if not hasattr(response, "context_data"):
+        response = super().changelist_view(
+            request, extra_context={"title": "活动报名数据", **(extra_context or {})}
+        )
+        if not getattr(response, "context_data", None) or "cl" not in response.context_data:
             return response
         queryset = response.context_data["cl"].queryset.prefetch_related("attendees")
         registrations = list(queryset)

@@ -1,0 +1,35 @@
+{% extends "admin/base_site.html" %}
+
+{% block bodyclass %}unified-admin{% endblock %}
+{% block nav-sidebar %}{% endblock %}
+
+{% block content %}
+<div class="workspace-heading"><div><p>按表单查看、筛选和导出客户提交的信息。</p></div></div>
+
+<section class="workspace-stats" aria-label="数据概览">
+  <article><small>表单数量</small><strong>{{ form_count }}</strong></article>
+  <article><small>累计提交</small><strong>{{ response_count }}</strong></article>
+  <article><small>普通问卷</small><strong>{{ survey_response_count }}</strong></article>
+  <article><small>活动报名</small><strong>{{ registration_count }}</strong></article>
+</section>
+
+<section class="workspace-section">
+  <div class="workspace-section-title"><div><h2>各表单数据</h2><p>进入详细记录后可继续搜索、筛选和导出。</p></div></div>
+  <div class="admin-data-table">
+    <table>
+      <thead><tr><th>表单</th><th>类型</th><th>提交量</th><th>最近提交</th><th>操作</th></tr></thead>
+      <tbody>
+        {% for form in forms %}
+          <tr>
+            <th>{{ form.title }}</th>
+            <td><span class="form-type">{{ form.type }}</span></td>
+            <td><strong>{{ form.response_count }}</strong> 份</td>
+            <td>{{ form.latest_response|date:"Y-m-d H:i"|default:"暂无" }}</td>
+            <td><a class="button primary" href="{{ form.data_url }}">查看、统计与导出</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

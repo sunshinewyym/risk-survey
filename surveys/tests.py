@@ -175,6 +175,18 @@ class AdminTests(TestCase):
         self.assertEqual(markdown_response.status_code, 200)
         self.assertIn("测试公司", markdown_response.content.decode("utf-8"))
 
+    def test_unified_form_and_data_centers(self):
+        home = self.client.get(reverse("admin_home"), HTTP_HOST="survey.test")
+        self.assertEqual(home.status_code, 200)
+        self.assertContains(home, "表单中心")
+        self.assertContains(home, "企业调查")
+        self.assertContains(home, "总包反背锅行动 001 报名表")
+        self.assertContains(home, "一片叶律师")
+        data = self.client.get(reverse("admin_data_center"), HTTP_HOST="survey.test")
+        self.assertEqual(data.status_code, 200)
+        self.assertContains(data, "数据中心")
+        self.assertContains(data, "查看、统计与导出")
+
 
 @HOSTS
 class EventRegistrationTests(TestCase):
@@ -309,3 +321,18 @@ class EventRegistrationTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertIn("统计测试公司", response.content.decode("utf-8"))
+        delete_data = {
+            "_selected_action": [str(registration.id)],
+            "index": "0",
+            "action": "delete_selected",
+        }
+        confirmation = self.client.post(
+            changelist, delete_data, HTTP_HOST="survey.test"
+        )
+        self.assertEqual(confirmation.status_code, 200)
+        self.assertTrue(EventRegistration.objects.filter(pk=registration.pk).exists())
+        deleted = self.client.post(
+            changelist, {**delete_data, "post": "yes"}, HTTP_HOST="survey.test"
+        )
+        self.assertEqual(deleted.status_code, 302)
+        self.assertFalse(EventRegistration.objects.filter(pk=registration.pk).exists())

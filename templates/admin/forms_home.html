@@ -1,0 +1,57 @@
+{% extends "admin/base_site.html" %}
+
+{% block bodyclass %}unified-admin{% endblock %}
+{% block nav-breadcrumbs %}{% endblock %}
+{% block nav-sidebar %}{% endblock %}
+
+{% block content %}
+<div class="workspace-heading">
+  <div><p>统一管理普通问卷、活动报名及后续新增的信息收集表单。</p></div>
+  <a class="button workspace-primary" href="{% url 'admin:surveys_survey_add' %}">＋ 新建普通问卷</a>
+</div>
+
+<section class="workspace-stats" aria-label="表单概览">
+  <article><small>全部表单</small><strong>{{ form_count }}</strong></article>
+  <article><small>正在收集</small><strong>{{ collecting_count }}</strong></article>
+  <article><small>累计提交</small><strong>{{ response_count }}</strong></article>
+  <article><small>飞书通知</small><strong class="status-text">{{ feishu_enabled|yesno:"已启用,未启用" }}</strong></article>
+</section>
+
+<section class="workspace-section">
+  <div class="workspace-section-title"><div><h2>全部表单</h2><p>问卷和报名表统一从这里进入。</p></div></div>
+  <div class="form-card-grid">
+    {% for form in forms %}
+      <article class="admin-form-card">
+        <header><span class="form-type">{{ form.type }}</span><span class="form-status {{ form.status_class }}">{{ form.status }}</span></header>
+        <h2>{{ form.title }}</h2>
+        <p>{{ form.description|default:"暂无说明"|truncatechars:100 }}</p>
+        <dl>
+          <div><dt>已收集</dt><dd>{{ form.response_count }} 份</dd></div>
+          <div><dt>最近提交</dt><dd>{{ form.latest_response|date:"Y-m-d H:i"|default:"暂无" }}</dd></div>
+        </dl>
+        <footer class="admin-card-actions">
+          {% if form.edit_url %}<a class="button" href="{{ form.edit_url }}">编辑表单</a>{% endif %}
+          <a class="button" href="{{ form.public_url }}" target="_blank" rel="noopener">打开客户页面</a>
+          <button class="button copy-link" type="button" data-url="{{ form.public_url }}">复制客户链接</button>
+          <a class="button primary" href="{{ form.data_url }}">查看数据</a>
+        </footer>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="workspace-system">
+  <div><h2>系统管理</h2><p>管理后台登录账号和权限。</p></div>
+  <a class="button" href="{% url 'admin:auth_user_changelist' %}">后台账号</a>
+</section>
+
+<script>
+document.querySelectorAll(".copy-link").forEach((button) => {
+  button.addEventListener("click", async () => {
+    await navigator.clipboard.writeText(new URL(button.dataset.url, location.origin).href);
+    button.textContent = "已复制";
+    setTimeout(() => button.textContent = "复制客户链接", 1500);
+  });
+});
+</script>
+{% endblock %}

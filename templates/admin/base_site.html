@@ -1,20 +1,20 @@
 {% extends "admin/base.html" %}
 {% load static %}
 
-{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | ylaw survey{% endblock %}
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | 一片叶律师{% endblock %}
 
 {% block responsive %}
   {{ block.super }}
-  <link rel="stylesheet" href="{% static 'surveys/admin.css' %}?v=20260901">
+  <link rel="stylesheet" href="{% static 'surveys/admin.css' %}?v=20260901-4">
 {% endblock %}
 
 {% block branding %}
   <div id="site-name">
     <a href="{% url 'admin:index' %}" aria-label="返回管理首页">
-      <span class="admin-brand-mark">Y</span>
+      <span class="admin-brand-logo"><span class="admin-lawyer-logo" role="img" aria-label="Lawyer Y 一片叶律师"></span></span>
       <span class="admin-brand-copy">
-        <strong>ylaw survey</strong>
-        <small>客户问卷管理中心</small>
+        <strong>一片叶律师</strong>
+        <small>表单管理中心</small>
       </span>
     </a>
   </div>
@@ -24,11 +24,12 @@
 {% block nav-global %}
   {% if user.is_authenticated %}
     <nav class="admin-shortcuts" aria-label="常用功能">
-      <a href="/" target="_blank" rel="noopener">查看公开问卷</a>
-      <a href="{% url 'surveys:event_registration' %}" target="_blank" rel="noopener">打开活动报名</a>
-      <a href="{% url 'admin:surveys_eventregistration_changelist' %}">报名统计</a>
-      <a href="{% url 'admin:surveys_submission_changelist' %}">提交记录</a>
-      <a class="shortcut-primary" href="{% url 'admin:surveys_survey_add' %}">＋ 新建问卷</a>
+      <a href="{% url 'admin_home' %}">表单中心</a>
+      <a href="{% url 'admin_data_center' %}">数据中心</a>
+      <a href="{% url 'admin:auth_user_changelist' %}">系统管理</a>
+      <a class="shortcut-primary" href="{% url 'admin:surveys_survey_add' %}">＋ 新建表单</a>
     </nav>
   {% endif %}
 {% endblock %}
+
+{% block nav-sidebar %}{% endblock %}
